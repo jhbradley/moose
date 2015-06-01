@@ -69,6 +69,7 @@
 #include "ElasticEnergyMaterial.h"
 #include "GBAnisotropy.h"
 #include "GBEvolution.h"
+#include "GBQuadrantTest.h"
 #include "KKSXeVacSolidMaterial.h"
 #include "LinearIsoElasticPFDamage.h"
 #include "MathEBFreeEnergy.h"
@@ -222,6 +223,7 @@ PhaseFieldApp::registerObjects(Factory & factory)
   registerMaterial(ElasticEnergyMaterial);
   registerMaterial(GBAnisotropy);
   registerMaterial(GBEvolution);
+  registerMaterial(GBQuadrantTest);
   registerMaterial(KKSXeVacSolidMaterial);
   registerMaterial(LinearIsoElasticPFDamage);
   registerMaterial(MathEBFreeEnergy);
