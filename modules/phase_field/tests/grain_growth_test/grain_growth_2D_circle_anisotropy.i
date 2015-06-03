@@ -89,6 +89,7 @@
     Q = 0.23 #Activation energy for grain growth from Schonfelder 1997
     T = 450 # K   #Constant temperature of the simulation (for mobility calculation)
     wGB = 14 # nm      #Width of the diffuse GB
+    v ='gr0 gr1'   #Had to add this line before it would run
   [../]
 []
 
@@ -125,13 +126,8 @@
   nl_abs_tol = 1e-11 # Relative tolerance for nonlienar solves
   nl_rel_tol = 1e-8 # Absolute tolerance for nonlienar solves
   start_time = 0.0
-  end_time = 10000
+  end_time = 8000
   dt = 25
-  [./TimeStepper]
-    type = IterationAdaptiveDT
-    dt = 25 # Initial time step.  In this simulation it changes.
-    optimal_iterations = 6 #Time step will adapt to maintain this number of nonlinear iterations
-  [../]
   [./Adaptivity]
     # Block that turns on mesh adaptivity. Note that mesh will never coarsen beyond initial mesh (before uniform refinement)
     initial_adaptivity = 2 # Number of times mesh is adapted to initial condition
@@ -142,7 +138,7 @@
 []
 
 [Outputs]
-  file_base = circle_2D
+  file_base = circle_2D_anisotropic
   output_initial = true
   exodus = true
   csv = true
