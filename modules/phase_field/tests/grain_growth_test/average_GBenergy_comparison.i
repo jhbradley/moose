@@ -129,7 +129,7 @@
   [../]
   [./average_GBenergy]
     type = FunctionValuePostprocessor
-    function = #Put expression to parse here
+    function = 2*t #Put expression to parse here
     execute_on = 'initial timestep_end'
   [../]
 []
@@ -149,8 +149,8 @@
   nl_abs_tol = 1e-11 # Relative tolerance for nonlienar solves
   nl_rel_tol = 1e-8 # Absolute tolerance for nonlienar solves
   start_time = 0.0
-  end_time = 10000
-  dt = 25
+  end_time = 10
+  dt = 1
   [./TimeStepper]
     type = IterationAdaptiveDT
     dt = 5 # Initial time step.  In this simulation it changes.
@@ -166,7 +166,7 @@
 []
 
 [Outputs]
-  file_base = circle_2D_anisotropy_rsw
+  file_base = average_GBenergy
   output_initial = true
   exodus = true
   csv = true
