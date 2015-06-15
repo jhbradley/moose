@@ -128,7 +128,7 @@
     type = TimestepSize
   [../]
   [./average_GBenergy]
-    type = FunctionValuePostprocessor
+    type = PlotFunction
     function = 2*t #Put expression to parse here
     execute_on = 'initial timestep_end'
   [../]
