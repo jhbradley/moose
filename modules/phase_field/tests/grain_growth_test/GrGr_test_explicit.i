@@ -110,14 +110,16 @@
     function = 'avg_GBenergy'
     execute_on = 'initial timestep_end'
   [../]
-  #[./grain1]                                             #This doesn't work
-  #  type = ElementIntegralVariablePostprocessor
-  #  variable = grain1
-  #[../]
-  #[./grain0]
-  #  type = ElementIntegralVariablePostprocessor
-  #  variable = grain0
-  #[../]
+  [./grain1]                                             #This doesn't work
+    type = ElementIntegralMaterialProperty
+    #variable = grain1
+    mat_prop = _sigma
+  [../]
+  [./grain0]
+    type = ElementIntegralMaterialProperty
+    #variable = grain0
+    mat_prop = _sigma
+  [../]
 []
 
 [Preconditioning]
