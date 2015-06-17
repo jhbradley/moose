@@ -40,6 +40,10 @@
     order = FIRST
     family = LAGRANGE
   [../]
+  [./total_free_energy]
+    order = CONSTANT
+    family = MONOMIAL  #I'm not totally sure if this should be a constant monomial
+  [../]
 []
 
 [Kernels]
@@ -53,6 +57,13 @@
     variable = bnds
     execute_on = timestep_end
   [../]
+  [./total_free_energy]
+    type = TotalFreeEnergy
+    variable = total_free_energy
+    kappa_names = 'kappa_op kappa_op' #These are the default names for this material property
+    interfacial_vars = 'gr0 gr1'
+    execute_on = 'initial timestep_end'
+  [../]
 []
 
 [Materials]
@@ -65,6 +76,27 @@
     Q = 0.23 #Migration energy in eV
     GBenergy = 0.708 #GB energy in J/m^2
   [../]
+  [./grain0]
+    type = ParsedMaterial
+    block = 0
+    args = 'gr0 total_free_energy'
+    function = 'total_free_energy*(gr0/gr0-gr0)'
+    outputs = exodus
+  [../]
+  [./grain1]
+    type = ParsedMaterial
+    block = 0
+    args = 'gr1 total_free_energy'                  #Am I creating or specifying a variable here?
+    function = 'total_free_energy*(gr1/gr1-gr1)'
+    outputs = exodus
+  [../]
+[]
+
+[Functions]
+  [./avg_GBenergy]
+    type = ParsedFunction
+    value = 2*t#'total_free_energy*grain1*grain0'
+  [../]
 []
 
 [Postprocessors]
@@ -73,6 +105,19 @@
     variable = gr1
     execute_on = 'initial timestep_end'
   [../]
+  [./average_GBenergy]
+    type = PlotFunction
+    function = 'avg_GBenergy'
+    execute_on = 'initial timestep_end'
+  [../]
+  #[./grain1]                                             #This doesn't work
+  #  type = ElementIntegralVariablePostprocessor
+  #  variable = grain1
+  #[../]
+  #[./grain0]
+  #  type = ElementIntegralVariablePostprocessor
+  #  variable = grain0
+  #[../]
 []
 
 [Preconditioning]
@@ -91,8 +136,8 @@
   solve_type = NEWTON
   l_tol = 1.0e-6
   nl_rel_tol = 1.0e-6
-  num_steps = 61
-  dt = 0.08
+  num_steps = 3
+  dt = 1
 []
 
 [Outputs]
@@ -100,7 +145,7 @@
   output_initial = true
   output_final = true
   csv = true
-  interval = 20
+  #interval = 20
   exodus = true
   print_linear_residuals = true
   print_perf_log = true
