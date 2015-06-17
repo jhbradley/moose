@@ -118,6 +118,13 @@
   [../]
 []
 
+[Functions]
+  [./avg_GBenergy]
+    type = ParsedFunction
+    value = 2*t#'total_free_energy*grain1*grain0'
+  [../]
+[]
+
 [Postprocessors]
   [./grainArea]
     type = ElementIntegralVariablePostprocessor
@@ -129,7 +136,7 @@
   [../]
   [./average_GBenergy]
     type = PlotFunction
-    function = 2*t #Put expression to parse here
+    function = 'avg_GBenergy'
     execute_on = 'initial timestep_end'
   [../]
 []
@@ -149,7 +156,7 @@
   nl_abs_tol = 1e-11 # Relative tolerance for nonlienar solves
   nl_rel_tol = 1e-8 # Absolute tolerance for nonlienar solves
   start_time = 0.0
-  end_time = 10
+  end_time = 3
   dt = 1
   [./TimeStepper]
     type = IterationAdaptiveDT
