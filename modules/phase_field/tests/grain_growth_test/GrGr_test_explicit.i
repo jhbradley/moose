@@ -57,12 +57,13 @@
     variable = bnds
     execute_on = timestep_end
   [../]
-  [./total_free_energy]
+  [./free_energy]
     type = TotalFreeEnergy
     variable = total_free_energy
     kappa_names = 'kappa_op kappa_op' #These are the default names for this material property
     interfacial_vars = 'gr0 gr1'
     execute_on = 'initial timestep_end'
+    block = 0
   [../]
 []
 
@@ -80,14 +81,14 @@
     type = ParsedMaterial
     block = 0
     args = 'gr0 total_free_energy'
-    function = 'total_free_energy*(gr0/gr0-gr0)'
+    function = 'total_free_energy*(gr0*(1-gr0))'
     outputs = exodus
   [../]
   [./grain1]
     type = ParsedMaterial
     block = 0
     args = 'gr1 total_free_energy'                  #Am I creating or specifying a variable here?
-    function = 'total_free_energy*(gr1/gr1-gr1)'
+    function = 'total_free_energy*(gr1*(1-gr1))'
     outputs = exodus
   [../]
 []
@@ -113,12 +114,12 @@
   [./grain1]                                             #This doesn't work
     type = ElementIntegralMaterialProperty
     #variable = grain1
-    mat_prop = _sigma
+    mat_prop = F1
   [../]
   [./grain0]
     type = ElementIntegralMaterialProperty
     #variable = grain0
-    mat_prop = _sigma
+    mat_prop = F0
   [../]
 []
 
