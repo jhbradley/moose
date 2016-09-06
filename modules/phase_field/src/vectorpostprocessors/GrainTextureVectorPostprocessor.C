@@ -5,67 +5,133 @@
 /*             See LICENSE for full restrictions                */
 /****************************************************************/
 #include "GrainTextureVectorPostprocessor.h"
-#include "EulerAngleProvider.h"
-#include "Assembly.h"
+#include "EBSDMesh.h"
+#include "PointSamplerBase.h"
+
+// TODO: Figure out how to automatically sample the maximum refinement level.
+// TODO: Error checking
+// TODO: Make sure you delete trailing whitespace from this file before trying to merge it.
 
 template<>
-InputParameters validParams<GrainTextureVectorPostprocessor>()
+InputParameters validParams<GrainTextureVPP>()
 {
-  InputParameters params = validParams<ElementVectorPostprocessor>();
-  params += validParams<SamplerBase>();
-  params.addClassDescription("Gives out info on the grain boundary properties");
-  params.addRequiredParam<UserObjectName>("euler_angle_provider", "The EulerAngleProvider User object");
-  params.addRequiredCoupledVar("unique_grains", "The grain number");
-  params.addRequiredParam<unsigned int>("grain_num", "the number of grains");
-  return params;
+InputParameters params = validParams<PointSamplerBase>();
+
+MooseEnum sort_by("x-index-fastest z-index-fastest", "x-index-fastest");
+params.addParam<MooseEnum> >("sort_by", sort_by, "How you want to sort the points in the file.");
+params.addRequiredParam<Real>("max_refinement_level", "The maximum refinement level in the mesh.")
+
+return params;
 }
 
-GrainTextureVectorPostprocessor::GrainTextureVectorPostprocessor(const InputParameters & parameters) :
-    ElementVectorPostprocessor(parameters),
-    SamplerBase(parameters, this, _communicator),
-    _euler(getUserObject<EulerAngleProvider>("euler_angle_provider")),
-    _unique_grains(coupledValue("unique_grains")),
-    _grain_num(getParam<unsigned int>("grain_num")),
-    _sample(4)
+GrainTextureVPP::GrainTextureVPP(const InputParameters & parameters) :
+  PointSamplerBase(parameters),
+  _sort_by(getParam<MooseEnum>("sort_by")),
+  _max_refinement_level(getParam<Real>("max_refinement_level"))
 {
-  if (_euler.getGrainNum() < _grain_num)
-    mooseError("Euler angle provider has too few angles.");
+getPoints();
 
-  std::vector<std::string> output_variables(4);
-  output_variables[0] = "unique_grain";
-  output_variables[1] = "euler_angle_z";
-  output_variables[2] = "euler_angle_x\'";
-  output_variables[3] = "euler_angle_z\"";
-  SamplerBase::setupVariables(output_variables);
+_ids.resize(_points.size());
+
+for (unsigned int i=0; i<_points.size(); i++)
+  _ids[i] = i;
 }
 
 void
-GrainTextureVectorPostprocessor::initialize()
+GrainTextureVectorPostprocessor::getPoints()
 {
-  SamplerBase::initialize();
+// Get the EBSDMesh dimensions
+const EBSDMeshGeometry & ebsd_geometry = EBSDMesh::getEBSDGeometry();         // I don't know if I need the const here.
+
+_x_step = ebsd_geometry.d[0];
+_y_step = ebsd_geometry.d[1];
+_z_step = ebsd_geometry.d[2];
+
+_x_dim = ebsd_geometry.n[0];
+_y_dim = ebsd_geometry.n[1];
+_z_dim = ebsd_geometry.n[2];
+
+_x_min = ebsd_geometry.min[0];
+_y_min = ebsd_geometry.min[1];
+_z_min = ebsd_geometry.min[2];
+
+// Increase the dimensions and cut the step size for any uniform refinements
+Real change_factor = std::pow(2, _max_refinement_level);
+
+_x_dim = _x_dim * change_factor;
+_y_dim = _y_dim * change_factor;
+_z_dim = _z_dim * change_factor;
+
+_x_step = _x_step / change_factor;
+_y_step = _y_step / change_factor;
+_z_step = _z_step / change_factor;
+
+// Determine the coordinates of the sampling points
+unsigned int num_points = _x_dim * _y_dim * _z_dim;
+_points.resize(num_points);
+
+for (unsigned int global_index = 0; global_index < num_points; ++global_index)
+{
+  // Step through each point
+  Point tmp_point = pointFromIndex(global_index);
+
+  _points.push_back(tmp_point);                                               // You are going to need to figure out the most efficient way to do this, i.e., by reference.
+}
 }
 
-void
-GrainTextureVectorPostprocessor::execute()
-{
-  _sample[0] = _unique_grains[0] + 1; // Index starts at 0, but we want to display first grain as grain 1.
 
-  const EulerAngles & angle = _euler.getEulerAngles(_unique_grains[0]);
-  _sample[1] = angle.phi1; // Get the Z   rotation
-  _sample[2] = angle.Phi;  // Get the X'  rotation
-  _sample[3] = angle.phi2; // Get the Z'' rotation
-  SamplerBase::addSample(_current_elem->centroid() /* x,y,z coordinates of elem centroid */, _current_elem->id(), _sample);
+Point
+newGrainTextureVPP::pointFromIndex(const unsigned int & global_index)
+{
+// TODO: Be sure to add in error checking here.
+                                                                              // Make sure to declare unsigned int _sort_by in header file.
+switch (_sort_by)
+{
+  // x_index increasing fastest, then y, then z
+  case "x-index-fastest":
+    // Get x_index
+    unsigned int x_index;
+    x_index = global_index % _x_dim;
+
+    // Get y_index
+    unsigned int helper_index;
+    helper_index = global_index / _x_dim; // Make use of integer math.
+
+    unsigned int y_index;
+    y_index = helper_index % _y_dim;
+
+    // Get z_index
+    unsigned int z_index;
+    z_index = global_index / (_x_dim * _y_dim); // Integer math once again.
+
+    break;
+
+  // z_index increasing fastest, then y, then x
+  case "z-index-fastest":
+    // Get z_index
+    unsigned int z_index;
+    z_index = global_index % _z_dim;
+
+    // Get y_index
+    unsigned int helper_index;
+    helper_index = global_index / _z_dim;
+
+    unsigned int y_index;
+    y_index = helper_index % _y_dim;
+
+    // Get x_index
+    unsigned int x_index;
+    x_index = global_index / (_z_dim * _y_dim);
 }
 
-void
-GrainTextureVectorPostprocessor::threadJoin(const UserObject & y)
-{
-  const GrainTextureVectorPostprocessor & vpp = static_cast<const GrainTextureVectorPostprocessor &>(y);
-  SamplerBase::threadJoin(vpp);
-}
+// Calculate point based on indices. We want to sample what would be the centroid
+// of each element were we to oversample the mesh at the refinement level of
+// the smallest elements.
+x_coord = _x_min + _x_step / 2.0 + (_x_step * x_index);
+y_coord = _y_min + _y_step / 2.0 + (_y_step * y_index);
+z_coord = _z_min + _z_step / 2.0 + (_z_step * z_index);
 
-void
-GrainTextureVectorPostprocessor::finalize()
-{
-  SamplerBase::finalize();
+Point point(x_coord, y_coord, z_coord);
+
+return point;
 }

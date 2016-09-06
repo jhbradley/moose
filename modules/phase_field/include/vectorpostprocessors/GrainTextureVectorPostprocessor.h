@@ -7,37 +7,35 @@
 #ifndef GRAINTEXTUREVECTORPOSTPROCESSOR
 #define GRAINTEXTUREVECTORPOSTPROCESSOR
 
-#include "ElementVectorPostprocessor.h"
-#include "SamplerBase.h"
+// MOOSE includes
+#include "PointSamplerBase.h"
 
-// Forward declarations
-class EulerAngleProvider;
-class GrainTextureVectorPostprocessor;
+// Forward Declarations
+class GrainTextureVPP;
 
 template<>
-InputParameters validParams<GrainTextureVectorPostprocessor>();
+InputParameters validParams<GrainTextureVPP>();
 
-/**
- *  GrainTextureVectorPostprocessor is a VectorPostprocessor that outputs the
- *  the coordinates, grain number, and Euler Angles associated with each element.
- *  Currently only works with a uniform, structured grid (no mesh adaptivity).
- */
-class GrainTextureVectorPostprocessor: public ElementVectorPostprocessor,
-                                       protected SamplerBase
+class GrainTextureVPP : public PointSamplerBase
 {
 public:
-  GrainTextureVectorPostprocessor(const InputParameters & parameters);
-  virtual void initialize();
-  virtual void execute();
-  using SamplerBase::threadJoin;
-  virtual void threadJoin(const UserObject & uo);
-  virtual void finalize();
+  GrainTextureVPP(const InputParameters & parameters);
 
 protected:
-  const EulerAngleProvider & _euler;
-  const VariableValue & _unique_grains;
-  const unsigned int _grain_num;
-  std::vector<Real> _sample;
+  // Mesh variables
+  Real _x_step;
+  Real _y_step;
+  Real _z_step;
+
+  Real _x_dim;
+  Real _y_dim;
+  Real _z_dim;
+
+  Real _x_min;
+  Real _y_min;
+  Real _z_min;
+
+  Real _max_refinement_level;
 };
 
 #endif //GRAINTEXTUREVECTORPOSTPROCESSOR_H
