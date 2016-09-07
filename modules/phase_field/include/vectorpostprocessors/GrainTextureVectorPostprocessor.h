@@ -11,31 +11,36 @@
 #include "PointSamplerBase.h"
 
 // Forward Declarations
-class GrainTextureVPP;
+class GrainTextureVectorPostprocessor;
 
 template<>
-InputParameters validParams<GrainTextureVPP>();
+InputParameters validParams<GrainTextureVectorPostprocessor>();
 
-class GrainTextureVPP : public PointSamplerBase
+class GrainTextureVectorPostprocessor : public PointSamplerBase
 {
 public:
-  GrainTextureVPP(const InputParameters & parameters);
+  GrainTextureVectorPostprocessor(const InputParameters & parameters);
 
 protected:
+  void getPoints();
+  Point pointFromIndex(const unsigned int & global_index);
+
   // Mesh variables
   Real _x_step;
   Real _y_step;
   Real _z_step;
 
-  Real _x_dim;
-  Real _y_dim;
-  Real _z_dim;
+  unsigned int _x_dim;
+  unsigned int _y_dim;
+  unsigned int _z_dim;
 
   Real _x_min;
   Real _y_min;
   Real _z_min;
 
   Real _max_refinement_level;
+
+  std::string _sort_by;
 };
 
 #endif //GRAINTEXTUREVECTORPOSTPROCESSOR_H
