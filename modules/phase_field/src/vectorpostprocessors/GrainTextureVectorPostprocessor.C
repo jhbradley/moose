@@ -61,7 +61,7 @@ GrainTextureVectorPostprocessor::getPoints()
   _z_min = ebsd_geometry.min[2];
 
   // Increase the dimensions and cut the step size for any uniform refinements
-  Real change_factor = std::pow(2, _max_refinement_level);
+  Real change_factor = std::pow(2, _max_refinement_level); // TODO: check to see if this should be an int
 
   _x_dim = _x_dim * change_factor;
   _y_dim = _y_dim * change_factor;
@@ -72,7 +72,7 @@ GrainTextureVectorPostprocessor::getPoints()
   _z_step = _z_step / change_factor;
 
   // Determine the coordinates of the sampling points
-  unsigned int num_points = _x_dim * _y_dim * _z_dim;
+  unsigned int num_points = _x_dim * _y_dim * (_z_dim == 0 ? 1 : _z_dim);
   _points.resize(num_points);
 
   for (unsigned int global_index = 0; global_index < num_points; ++global_index)
@@ -102,29 +102,44 @@ GrainTextureVectorPostprocessor::pointFromIndex(const unsigned int & global_inde
   {
     // x_index increasing fastest, then y, then z
     case 1:
-      // Get x_index
-      x_index = global_index % _x_dim;
 
-      // Get y_index
-      helper_index = global_index / _x_dim; // Make use of integer math.
-      y_index = helper_index % _y_dim;
+      if (_z_dim != 0)
+      {
+        // Get x_index
+        x_index = global_index % _x_dim;
 
-      // Get z_index
-      z_index = global_index / (_x_dim * _y_dim); // Integer math once again.
+        // Get y_index
+        helper_index = global_index / _x_dim; // Make use of integer math.
+        y_index = helper_index % _y_dim;
+
+        // Get z_index
+        z_index = global_index / (_x_dim * _y_dim); // Integer math once again.
+      }
+      else
+      {
+        /* WIP */
+      }
 
       break;
 
     // z_index increasing fastest, then y, then x
     case 2:
       // Get z_index
-      z_index = global_index % _z_dim;
+      if (_z_dim != 0)
+      {
+        z_index = global_index % _z_dim;
 
-      // Get y_index
-      helper_index = global_index / _z_dim;
-      y_index = helper_index % _y_dim;
+        // Get y_index
+        helper_index = global_index / _z_dim;
+        y_index = helper_index % _y_dim;
 
-      // Get x_index
-      x_index = global_index / (_z_dim * _y_dim);
+        // Get x_index
+        x_index = global_index / (_z_dim * _y_dim);
+      }
+      else
+      {
+        /* WIP */
+      }
   }
 
   // Calculate point based on indices. We want to sample what would be the centroid
