@@ -72,14 +72,15 @@ GrainTextureVectorPostprocessor::getPoints()
   _z_step = _z_step / change_factor;
 
   // Determine the coordinates of the sampling points
+
+  // Determine the number of points
   unsigned int num_points = _x_dim * _y_dim * (_z_dim == 0 ? 1 : _z_dim);
   _points.resize(num_points);
 
+  // Step through each point
   for (unsigned int global_index = 0; global_index < num_points; ++global_index)
   {
-    // Step through each point
     Point tmp_point = pointFromIndex(global_index);
-
     _points[global_index] = tmp_point; // TODO: Is this the most efficient thing?
   }
 }

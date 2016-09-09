@@ -35,6 +35,18 @@
     family = MONOMIAL
     order = CONSTANT
   [../]
+  [./phi1_aux_var]
+    family = MONOMIAL
+    order = CONSTANT
+  [../]
+  [./Phi_aux_var]
+    family = MONOMIAL
+    order = CONSTANT
+  [../]
+  [./phi2_aux_var]
+    family = MONOMIAL
+    order = CONSTANT
+  [../]
 []
 
 [ICs]
@@ -76,6 +88,27 @@
     variable = ebsd_grains
     ebsd_reader = ebsd
     data_name = 'feature_id'
+    execute_on = 'initial timestep_end'
+  [../]
+  [./phi1_aux]
+    type = EBSDReaderPointDataAux
+    variable = phi1_aux_var
+    ebsd_reader = ebsd
+    data_name = 'phi1'
+    execute_on = 'initial timestep_end'
+  [../]
+  [./Phi_aux]
+    type = EBSDReaderPointDataAux
+    variable = Phi_aux_var
+    ebsd_reader = ebsd
+    data_name = 'phi'
+    execute_on = 'initial timestep_end'
+  [../]
+  [./phi2_aux]
+    type = EBSDReaderPointDataAux
+    variable = phi2_aux_var
+    ebsd_reader = ebsd
+    data_name = phi2
     execute_on = 'initial timestep_end'
   [../]
 []
@@ -123,7 +156,7 @@
     type = GrainTextureVectorPostprocessor
     max_refinement_level = 0
     index_by = x-index-fastest
-    variable = 'unique_grains ebsd_grains'
+    variable = 'unique_grains ebsd_grains phi1_aux_var Phi_aux_var phi2_aux_var'
     sort_by = id # This will sort by the global index, which is what we want
   [../]
 
