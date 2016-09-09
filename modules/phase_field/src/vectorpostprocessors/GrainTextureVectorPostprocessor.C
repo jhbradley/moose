@@ -19,8 +19,8 @@ InputParameters validParams<GrainTextureVectorPostprocessor>()
 InputParameters params = validParams<PointSamplerBase>();
 
 params.addRequiredParam<Real>("max_refinement_level", "The maximum refinement level in the mesh.");
-MooseEnum sort_by("x-index-fastest z-index-fastest", "x-index-fastest");
-params.addParam<MooseEnum >("sort_by", sort_by, "How you want to sort the points in the file.");
+MooseEnum index_by("x-index-fastest z-index-fastest", "x-index-fastest");
+params.addParam<MooseEnum >("index_by", index_by, "How you want to sort the points in the file.");
 
 return params;
 }
@@ -28,7 +28,7 @@ return params;
 GrainTextureVectorPostprocessor::GrainTextureVectorPostprocessor(const InputParameters & parameters) :
     PointSamplerBase(parameters),
     _max_refinement_level(getParam<Real>("max_refinement_level")),
-    _sort_by(getParam<MooseEnum>("sort_by"))
+    _index_by(getParam<MooseEnum>("index_by"))
 {
   getPoints();
 
@@ -80,7 +80,7 @@ GrainTextureVectorPostprocessor::getPoints()
     // Step through each point
     Point tmp_point = pointFromIndex(global_index);
 
-    _points.push_back(tmp_point); // TODO: Is this the most efficient thing?
+    _points[global_index] = tmp_point; // TODO: Is this the most efficient thing?
   }
 }
 
@@ -91,33 +91,33 @@ GrainTextureVectorPostprocessor::pointFromIndex(const unsigned int & global_inde
 
   unsigned int x_index, y_index, z_index, helper_index;
 
-  unsigned int sort_by;
+  unsigned int index_by;
 
-  if (_sort_by.compare("x-index-fastest"))
-    sort_by = 1;
+  if (_index_by.compare("x-index-fastest") == 0)
+    index_by = 1;
   else
-    sort_by = 2;
+    index_by = 2;
 
-  switch (sort_by)
+  switch (index_by)
   {
     // x_index increasing fastest, then y, then z
     case 1:
 
+      // Get x_index
+      x_index = global_index % _x_dim;
+
+      // Get y_index
+      helper_index = global_index / _x_dim; // Make use of integer math.
+      y_index = helper_index % _y_dim;
+
       if (_z_dim != 0)
       {
-        // Get x_index
-        x_index = global_index % _x_dim;
-
-        // Get y_index
-        helper_index = global_index / _x_dim; // Make use of integer math.
-        y_index = helper_index % _y_dim;
-
         // Get z_index
         z_index = global_index / (_x_dim * _y_dim); // Integer math once again.
       }
       else
       {
-        /* WIP */
+        z_index = 0;
       }
 
       break;
@@ -138,7 +138,14 @@ GrainTextureVectorPostprocessor::pointFromIndex(const unsigned int & global_inde
       }
       else
       {
-        /* WIP */
+        z_index = 0;
+
+        // Get y_index
+        y_index = global_index % _y_dim;
+
+        // Get x_index
+        helper_index = global_index / _y_dim; // Make use of integer math.
+        x_index = helper_index % _x_dim;
       }
   }
 
@@ -149,7 +156,7 @@ GrainTextureVectorPostprocessor::pointFromIndex(const unsigned int & global_inde
 
   x_coord = _x_min + _x_step / 2.0 + (_x_step * x_index);
   y_coord = _y_min + _y_step / 2.0 + (_y_step * y_index);
-  z_coord = _z_min + _z_step / 2.0 + (_z_step * z_index);
+  z_coord = (_z_dim != 0) ? _z_min + _z_step / 2.0 + (_z_step * z_index) : 0;
 
   Point point(x_coord, y_coord, z_coord);
 

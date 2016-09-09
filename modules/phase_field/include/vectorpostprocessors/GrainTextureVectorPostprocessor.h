@@ -40,7 +40,7 @@ protected:
 
   Real _max_refinement_level;
 
-  std::string _sort_by;
+  std::string _index_by;
 };
 
 #endif //GRAINTEXTUREVECTORPOSTPROCESSOR_H

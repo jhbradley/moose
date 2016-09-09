@@ -122,8 +122,9 @@
   [./gbInfo]
     type = GrainTextureVectorPostprocessor
     max_refinement_level = 0
-    sort_by = x-index-fastest
+    index_by = x-index-fastest
     variable = 'unique_grains ebsd_grains'
+    sort_by = id # This will sort by the global index, which is what we want
   [../]
 
 [Executioner]
@@ -140,7 +141,7 @@
   nl_rel_tol = 1.0e-8
 
   start_time = 0.0
-  num_steps = 30
+  num_steps = 2
 
   [./TimeStepper]
     type = IterationAdaptiveDT
@@ -159,7 +160,6 @@
 []
 
 [Outputs]
-  exodus = true
   print_perf_log = true
   csv = true
 []
